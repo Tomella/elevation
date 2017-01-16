@@ -7,21 +7,25 @@ export class PointElevationLoader {
 
    constructor(public extent: Extent2d = Extent2d.WORLD) { }
 
-   load(public template: string, point: GeoJSON.Position): Promise<GeoJSON.Position> {
-      if(!positionWithinBbox(this.extent.toBbox(), point)) {
-         immediateDefer(() => {
-            onload(null)
-         });
-      }
+   load(template: string, point: GeoJSON.Position): Promise<GeoJSON.Position> {
+      return new Promise<GeoJSON.Position>((onload, onerror) => {
 
-      var bbox = [
-         point[0] - 0.000001,
-         point[1] - 0.000001,
-         point[0] + 0.000001,
-         point[1] + 0.000001
-      ];
-      return new TerrainLoader().load(this.template.replace("${width}", 1).replace("${height}", 1).replace("${bbox}", bbox.join(","))).then( function (pointArray) {
-         return [point[0], point[1], pointArray[0]];
+         if (!positionWithinBbox(this.extent.toBbox(), point)) {
+            immediateDefer(() => {
+               onload(null);
+            });
+         }
+
+         let bbox = [
+            point[0] - 0.000001,
+            point[1] - 0.000001,
+            point[0] + 0.000001,
+            point[1] + 0.000001
+         ];
+         return new TerrainLoader().load(template.replace("${width}", 1).replace("${height}", 1).replace("${bbox}", bbox.join(","))).then(function (pointArray) {
+            return [point[0], point[1], pointArray[0]];
+         });
       });
+
    }
 }

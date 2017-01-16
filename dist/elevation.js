@@ -297,19 +297,22 @@ var PointElevationLoader = (function () {
         this.extent = extent;
     }
     PointElevationLoader.prototype.load = function (template, point) {
-        if (!positionWithinBbox(this.extent.toBbox(), point)) {
-            immediateDefer(function () {
-                onload(null);
+        var _this = this;
+        return new Promise(function (onload, onerror) {
+            if (!positionWithinBbox(_this.extent.toBbox(), point)) {
+                immediateDefer(function () {
+                    onload(null);
+                });
+            }
+            var bbox = [
+                point[0] - 0.000001,
+                point[1] - 0.000001,
+                point[0] + 0.000001,
+                point[1] + 0.000001
+            ];
+            return new TerrainLoader().load(template.replace("${width}", 1).replace("${height}", 1).replace("${bbox}", bbox.join(","))).then(function (pointArray) {
+                return [point[0], point[1], pointArray[0]];
             });
-        }
-        var bbox = [
-            point[0] - 0.000001,
-            point[1] - 0.000001,
-            point[0] + 0.000001,
-            point[1] + 0.000001
-        ];
-        return new TerrainLoader().load(this.template.replace("${width}", 1).replace("${height}", 1).replace("${bbox}", bbox.join(","))).then(function (pointArray) {
-            return [point[0], point[1], pointArray[0]];
         });
     };
     return PointElevationLoader;
