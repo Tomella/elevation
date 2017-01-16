@@ -1,18 +1,17 @@
 {
   "name": "elevation",
   "version": "0.0.1",
-  "description": "Explorer 3d is an API for viewing common geospatial file formats in WebGL.",
-  "homepage": "https://github.com/Tomella/explorer-3d",
-  "main": "dist/explorer3d.js",
+  "description": "Elevation is an API for loading common geospatial file formats for elevation values.",
+  "homepage": "https://github.com/Tomella/elevation",
+  "main": "dist/elevation.js",
   "keywords": [
     "gis",
-    "3d",
+    "2d",
     "geospatial",
-    "transform"
+    "load"
   ],
   "license": "LICENCE",
   "dependencies": {
-    "geotiffparser": "git@github.com:xlhomme/GeotiffParser.js.git"
   },
   "ignore": [
     "**/.*",
