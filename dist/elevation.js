@@ -292,12 +292,11 @@ function immediateDefer(fn) {
 }
 
 var PointElevationLoader = (function () {
-    function PointElevationLoader(template, extent) {
+    function PointElevationLoader(extent) {
         if (extent === void 0) { extent = Extent2d.WORLD; }
-        this.template = template;
         this.extent = extent;
     }
-    PointElevationLoader.prototype.load = function (point, onload, onerror) {
+    PointElevationLoader.prototype.load = function (template, point) {
         if (!positionWithinBbox(this.extent.toBbox(), point)) {
             immediateDefer(function () {
                 onload(null);
@@ -309,7 +308,7 @@ var PointElevationLoader = (function () {
             point[0] + 0.000001,
             point[1] + 0.000001
         ];
-        return new TerrainLoader().load(this.template.replace("{bbox}", bbox.join(","))).then(function (pointArray) {
+        return new TerrainLoader().load(this.template.replace("${width}", 1).replace("${height}", 1).replace("${bbox}", bbox.join(","))).then(function (pointArray) {
             return [point[0], point[1], pointArray[0]];
         });
     };

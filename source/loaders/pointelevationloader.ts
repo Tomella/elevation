@@ -5,9 +5,9 @@ import { immediateDefer } from "../utils/defer";
 
 export class PointElevationLoader {
 
-   constructor(public template: string, public extent: Extent2d = Extent2d.WORLD) { }
+   constructor(public extent: Extent2d = Extent2d.WORLD) { }
 
-   load(point: GeoJSON.Position, onload, onerror): Promise<GeoJSON.Position> {
+   load(public template: string, point: GeoJSON.Position): Promise<GeoJSON.Position> {
       if(!positionWithinBbox(this.extent.toBbox(), point)) {
          immediateDefer(() => {
             onload(null)
@@ -20,7 +20,7 @@ export class PointElevationLoader {
          point[0] + 0.000001,
          point[1] + 0.000001
       ];
-      return new TerrainLoader().load(this.template.replace("{bbox}", bbox.join(","))).then( function (pointArray) {
+      return new TerrainLoader().load(this.template.replace("${width}", 1).replace("${height}", 1).replace("${bbox}", bbox.join(","))).then( function (pointArray) {
          return [point[0], point[1], pointArray[0]];
       });
    }
