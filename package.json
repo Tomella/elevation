@@ -1,0 +1,73 @@
+{
+  "name": "elevation",
+  "version": "0.0.1",
+  "description": "JavaScript 3D library",
+  "main": "build/elevation.js",
+  "repository": "Tomella/elevation",
+  "jsnext:main": "build/elevation.modules.js",
+  "files": [
+    "package.json",
+    "LICENSE",
+    "README.md",
+    "build/elevation.js",
+    "build/elevation.min.js",
+    "build/elevation.modules.js",
+    "src",
+    "examples/js",
+    "examples/fonts",
+    "bower.json"
+  ],
+  "directories": {
+    "doc": "docs",
+    "example": "examples",
+    "test": "test"
+  },
+  "eslintConfig": {
+    "extends": "mdcs"
+  },
+  "scripts": {
+     "test": "karma start karma.conf.js"
+  },
+  "keywords": [
+    "elevation",
+    "elevation.js",
+    "3d"
+  ],
+  "author": "Tomella",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/Tomella/elevation.js/issues"
+  },
+  "homepage": "http://web.geospeedster.com/",
+  "devDependencies": {
+    "@types/es6-promise": "^0.0.32",
+    "@types/pako": "^0.2.31",
+    "add-stream": "^1.0.0",
+    "del": "^2.2.2",
+    "express": "^4.14.0",
+    "gulp": "^3.9.1",
+    "gulp-concat": "^2.6.1",
+    "gulp-inject": "^4.1.0",
+    "gulp-nodemon": "^2.2.1",
+    "gulp-rename": "^1.2.2",
+    "gulp-rollup": "^2.7.0",
+    "gulp-sourcemaps": "^1.9.1",
+    "gulp-tslint": "^7.0.1",
+    "gulp-typescript": "^3.1.3",
+    "gulp-uglify": "^2.0.0",
+    "jasmine": "^2.5.3",
+    "karma": "^1.3.0",
+    "karma-chrome-launcher": "^2.0.0",
+    "karma-jasmine": "^1.1.0",
+    "path": "^0.12.7",
+    "request": "^2.79.0",
+    "rollup-plugin-typescript": "^0.8.1",
+    "rollup-stream": "^1.16.0",
+    "tslint": "^4.2.0",
+    "typescript": "^2.1.4",
+    "vinyl-buffer": "^1.0.0",
+    "vinyl-source-stream": "^1.1.0",
+    "wiredep": "^4.0.0",
+    "yargs": "^6.4.0"
+  }
+}
