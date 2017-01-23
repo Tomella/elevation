@@ -42,6 +42,28 @@ export function expandBbox(bbox: number[], rawPoint: number[]) {
    bbox[3] = Math.max(bbox[3], rawPoint[1]);
 }
 
+
+// Not OK
+export function culledBbox(container: number[], subset: number[]) {
+   // We try to pull them into line
+   let left = subset[0] < container[0] ? container[0] : subset[0];
+   let right = subset[2] > container[2] ? container[2] : subset[2];
+   let bottom = subset[1] < container[1] ? container[1] : subset[1];
+   let top = subset[3] > container[3] ? container[3] : subset[3];
+
+   // Now make sure that they are still within.
+   if (left > subset[2]       // To far right
+      || right < subset[0]    // To far left
+      || top < subset[1]      // To low
+      || bottom > subset[3]   // To high
+      || left >= right        // To narrow
+      || top <= bottom) {     // Too thin
+         return null;
+   }
+
+   return [left, bottom, right, top];
+}
+
 // OK. Bounding Box like bbox
 export function createBboxFromPoints(coords: GeoJSON.Position[]): number[] {
    let bbox = [Infinity, Infinity, -Infinity, -Infinity];
@@ -103,17 +125,17 @@ export function calculatePosition(pt: GeoJSON.Position, bearing: number, distanc
 }
 
 export function calculateSegmentDetails(line: GeoJSON.Position[]) {
-   if(line.length < 2) {
+   if (line.length < 2) {
       return [0];
    }
 
    let lengths = [];
    let accumulateLength = 0;
-   for(let i = 1; i < line.length; i++) {
+   for (let i = 1; i < line.length; i++) {
       let length = calculateDistance(line[i - 1], line[i]);
       let endLength = accumulateLength + length;
       lengths.push({
-         start: line[i-1],
+         start: line[i - 1],
          end: line[i],
          bearing: calculateBearing(line[i - 1], line[i]),
          length: length,
@@ -152,7 +174,7 @@ export function calculateDistance(pt1: GeoJSON.Position, pt2: GeoJSON.Position) 
 }
 
 function calculatePositionAlong(coords: GeoJSON.Position[], distance: number) {
-   if(!coords) {
+   if (!coords) {
       return null;
    }
    if (coords.length < 2) {
