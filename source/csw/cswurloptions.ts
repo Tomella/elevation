@@ -4,7 +4,7 @@ export class CswUrlOptions {
    constructor(public options: any) {}
 
    get resolutionY() {
-      return  this.options.resolutionY ? this.options.resolutionY : Math.round(this.resolutionX * (this.bbox[3] - this.bbox[1]) / (this.bbox[2] - this.bbox[0]));
+      return  this.options.resolutionY ? this.options.resolutionY : Math.round(this.options.resolutionX * (this.options.bbox[3] - this.options.bbox[1]) / (this.options.bbox[2] - this.options.bbox[0]));
    }
 
    set resolutionY(val: number) {

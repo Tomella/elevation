@@ -600,7 +600,7 @@ var CswUrlOptions = (function () {
     }
     Object.defineProperty(CswUrlOptions.prototype, "resolutionY", {
         get: function () {
-            return this.options.resolutionY ? this.options.resolutionY : Math.round(this.resolutionX * (this.bbox[3] - this.bbox[1]) / (this.bbox[2] - this.bbox[0]));
+            return this.options.resolutionY ? this.options.resolutionY : Math.round(this.options.resolutionX * (this.options.bbox[3] - this.options.bbox[1]) / (this.options.bbox[2] - this.options.bbox[0]));
         },
         set: function (val) {
             this.options.resolutionY = val;
