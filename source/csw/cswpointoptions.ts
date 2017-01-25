@@ -1,10 +1,15 @@
 import { Extent2d } from "../domain/extent2d";
 
 export class CswPointOptions {
-   constructor(public template: string, public point: number[]) {}
+   constructor(public options: any = {}) {
+   }
 
-   get extent(): Extent2d {
-      return new Extent2d(...this.bbox);
+   get template(): string {
+      return this.options.point;
+   }
+
+   get point(): number[] {
+      return this.options.point;
    }
 
    get bbox(): number[] {
@@ -14,6 +19,10 @@ export class CswPointOptions {
          this.point[0] + 0.000001,
          this.point[1] + 0.000001
       ];
+   }
+
+   get extent(): Extent2d {
+      return new Extent2d(...this.bbox);
    }
 
    get location() {

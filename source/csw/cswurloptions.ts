@@ -1,21 +1,26 @@
 import { Extent2d } from "../domain/extent2d";
 
 export class CswUrlOptions {
-   private _resolutionY?: number;
-   constructor(public template: string, public bbox: number[], public options: any = {resolutionX: 500}) {
-
-   }
+   constructor(public options: any) {}
 
    get resolutionY() {
-      return  this._resolutionY ? this._resolutionY : Math.round(this.resolutionX * (this.bbox[3] - this.bbox[1]) / (this.bbox[2] - this.bbox[0]));
+      return  this.options.resolutionY ? this.options.resolutionY : Math.round(this.resolutionX * (this.bbox[3] - this.bbox[1]) / (this.bbox[2] - this.bbox[0]));
    }
 
    set resolutionY(val: number) {
-      this._resolutionY = val;
+      this.options.resolutionY = val;
    }
 
    get resolutionX(): number {
-      return this.options.resolutionX;
+      return this.options.resolutionX ? this.options.resolutionX : 500;
+   }
+
+   get template(): string {
+      return this.options.template;
+   }
+
+   get bbox(): number[] {
+      return this.options.bbox;
    }
 
    get extent(): Extent2d {

@@ -519,13 +519,20 @@ var PointElevationLoader = (function () {
 }());
 
 var CswPointOptions = (function () {
-    function CswPointOptions(template, point) {
-        this.template = template;
-        this.point = point;
+    function CswPointOptions(options) {
+        if (options === void 0) { options = {}; }
+        this.options = options;
     }
-    Object.defineProperty(CswPointOptions.prototype, "extent", {
+    Object.defineProperty(CswPointOptions.prototype, "template", {
         get: function () {
-            return new (Extent2d.bind.apply(Extent2d, [void 0].concat(this.bbox)))();
+            return this.options.point;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(CswPointOptions.prototype, "point", {
+        get: function () {
+            return this.options.point;
         },
         enumerable: true,
         configurable: true
@@ -538,6 +545,13 @@ var CswPointOptions = (function () {
                 this.point[0] + 0.000001,
                 this.point[1] + 0.000001
             ];
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(CswPointOptions.prototype, "extent", {
+        get: function () {
+            return new (Extent2d.bind.apply(Extent2d, [void 0].concat(this.bbox)))();
         },
         enumerable: true,
         configurable: true
@@ -559,16 +573,14 @@ var CswPointOptions = (function () {
 
 var CswPointElevationLoader = (function (_super) {
     __extends(CswPointElevationLoader, _super);
-    function CswPointElevationLoader(template, point, options) {
+    function CswPointElevationLoader(options) {
         if (options === void 0) { options = {}; }
         var _this = _super.call(this) || this;
-        _this.template = template;
-        _this.point = point;
         _this.options = options;
         return _this;
     }
     CswPointElevationLoader.prototype.load = function () {
-        var cswPointElevationOptions = Object.assign(new CswPointOptions(this.template, this.point), this.options);
+        var cswPointElevationOptions = new CswPointOptions(this.options);
         var loader = new PointElevationLoader(cswPointElevationOptions);
         return loader.load();
     };
@@ -576,25 +588,36 @@ var CswPointElevationLoader = (function (_super) {
 }(Loader));
 
 var CswUrlOptions = (function () {
-    function CswUrlOptions(template, bbox, options) {
-        if (options === void 0) { options = { resolutionX: 500 }; }
-        this.template = template;
-        this.bbox = bbox;
+    function CswUrlOptions(options) {
         this.options = options;
     }
     Object.defineProperty(CswUrlOptions.prototype, "resolutionY", {
         get: function () {
-            return this._resolutionY ? this._resolutionY : Math.round(this.resolutionX * (this.bbox[3] - this.bbox[1]) / (this.bbox[2] - this.bbox[0]));
+            return this.options.resolutionY ? this.options.resolutionY : Math.round(this.resolutionX * (this.bbox[3] - this.bbox[1]) / (this.bbox[2] - this.bbox[0]));
         },
         set: function (val) {
-            this._resolutionY = val;
+            this.options.resolutionY = val;
         },
         enumerable: true,
         configurable: true
     });
     Object.defineProperty(CswUrlOptions.prototype, "resolutionX", {
         get: function () {
-            return this.options.resolutionX;
+            return this.options.resolutionX ? this.options.resolutionX : 500;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(CswUrlOptions.prototype, "template", {
+        get: function () {
+            return this.options.template;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(CswUrlOptions.prototype, "bbox", {
+        get: function () {
+            return this.options.bbox;
         },
         enumerable: true,
         configurable: true
@@ -622,15 +645,12 @@ var CswUrlOptions = (function () {
 }());
 
 var CswTerrainLoader = (function () {
-    function CswTerrainLoader(template, bbox, resolutionX, resolutionY) {
-        if (resolutionX === void 0) { resolutionX = 500; }
-        this.template = template;
-        this.bbox = bbox;
-        this.resolutionX = resolutionX;
-        this.resolutionY = resolutionY;
+    function CswTerrainLoader(options) {
+        if (options === void 0) { options = {}; }
+        this.options = options;
     }
     CswTerrainLoader.prototype.load = function () {
-        var cswUrlOptions = new CswUrlOptions(this.template, this.bbox, { resolutionX: this.resolutionX, resoltionY: this.resolutionY });
+        var cswUrlOptions = new CswUrlOptions(this.options);
         var loader = new TerrainLoader(cswUrlOptions);
         return loader.load();
     };
@@ -716,15 +736,12 @@ var GeojsonElevationLoader = (function (_super) {
 }(Loader));
 
 var CswGeoJsonLoader = (function () {
-    function CswGeoJsonLoader(template, bbox, resolutionX, resolutionY) {
-        if (resolutionX === void 0) { resolutionX = 500; }
-        this.template = template;
-        this.bbox = bbox;
-        this.resolutionX = resolutionX;
-        this.resolutionY = resolutionY;
+    function CswGeoJsonLoader(options) {
+        if (options === void 0) { options = {}; }
+        this.options = options;
     }
     CswGeoJsonLoader.prototype.load = function () {
-        var cswUrlOptions = new CswUrlOptions(this.template, this.bbox, { resolutionX: this.resolutionX, resoltionY: this.resolutionY });
+        var cswUrlOptions = new CswUrlOptions(this.options);
         var loader = new GeojsonElevationLoader(cswUrlOptions);
         return loader.load();
     };
@@ -732,15 +749,11 @@ var CswGeoJsonLoader = (function () {
 }());
 
 var CswXyzLoader = (function () {
-    function CswXyzLoader(template, bbox, resolutionX, resolutionY) {
-        if (resolutionX === void 0) { resolutionX = 500; }
-        this.template = template;
-        this.bbox = bbox;
-        this.resolutionX = resolutionX;
-        this.resolutionY = resolutionY;
+    function CswXyzLoader(options) {
+        this.options = options;
     }
     CswXyzLoader.prototype.load = function () {
-        var cswUrlOptions = new CswUrlOptions(this.template, this.bbox, { resolutionX: this.resolutionX, resoltionY: this.resolutionY });
+        var cswUrlOptions = new CswUrlOptions(this.options);
         var loader = new XyzElevationLoader(cswUrlOptions);
         return loader.load();
     };
