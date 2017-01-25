@@ -579,6 +579,13 @@ var CswPointElevationLoader = (function (_super) {
         _this.options = options;
         return _this;
     }
+    Object.defineProperty(CswPointElevationLoader.prototype, "point", {
+        set: function (pt) {
+            this.options.point = pt;
+        },
+        enumerable: true,
+        configurable: true
+    });
     CswPointElevationLoader.prototype.load = function () {
         var cswPointElevationOptions = new CswPointOptions(this.options);
         var loader = new PointElevationLoader(cswPointElevationOptions);

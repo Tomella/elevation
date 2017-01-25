@@ -7,6 +7,10 @@ export class CswPointElevationLoader extends Loader<number[]> {
       super();
    }
 
+   set point(pt: number[]) {
+      this.options.point = pt;
+   }
+
    load(): Promise<number[]> {
       let cswPointElevationOptions = new CswPointOptions(this.options);
       let loader = new PointElevationLoader(cswPointElevationOptions);
