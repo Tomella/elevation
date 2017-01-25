@@ -5,6 +5,7 @@ export { FileLoader } from "./loaders/fileloader";
 export { HttpTextLoader } from "./loaders/httptextloader";
 export { CswPointElevationLoader } from "./csw/cswpointelevationloader";
 export { CswTerrainLoader } from "./csw/cswterrainloader";
+export { CswGeoJsonLoader } from "./csw/cswgeojsonloader";
 export { CswXyzLoader } from "./csw/cswxyzloader";
 export { TerrainLoader } from "./geotiff/terrainloader";
 export { PointElevationLoader } from "./geotiff/pointelevationloader";

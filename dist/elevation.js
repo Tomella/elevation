@@ -347,45 +347,27 @@ var FileLoader = (function (_super) {
         var _this = _super.call(this) || this;
         _this.file = file;
         _this.callback = callback;
-        _this.pageNo = 0;
-        _this.length = 0;
-        _this.index = 0;
-        _this.blockSize = 64 * 1024;
-        _this.length = file.size;
         _this.reader = new FileReader();
         return _this;
     }
-    FileLoader.prototype.hasMore = function () {
-        return this.index + this.blockSize * this.pageNo < this.length - 1;
-    };
     FileLoader.prototype.load = function () {
         var _this = this;
         return new Promise(function (resolve, reject) {
-            _this.index = 0;
             var self = _this;
-            var start = _this.pageNo * _this.blockSize;
-            console.log("Block size: " + _this.blockSize + ", file size: " + _this.length);
             _this.reader.onloadend = function (evt) {
                 console.log("We have loaded with ready state = " + evt.target["readyState"]);
                 if (evt.target["readyState"] === FileReader.prototype.DONE) {
-                    console.log("Reading page " + self.pageNo);
-                    self.dispatchEvent(new Event("data", evt.target["result"]));
-                    _this.pageNo++;
-                    if (_this.hasMore()) {
-                        _this.load();
-                    }
-                    else {
-                        self.dispatchEvent(new Event("complete", evt.target["result"]));
-                        resolve(true);
-                    }
+                    var result = evt.target["result"];
+                    self.dispatchEvent(new Event("data", result));
+                    self.dispatchEvent(new Event("complete", result));
+                    resolve(result);
                 }
             };
             _this.reader.onerror = function (event) {
                 _this.dispatchEvent(new Event("error", { event: event }));
                 reject(event);
             };
-            var blob = _this.file.slice(start, start + self.blockSize);
-            _this.reader.readAsText(blob);
+            self.reader.readAsArrayBuffer(self.file);
         });
     };
     return FileLoader;
@@ -454,13 +436,15 @@ var TerrainLoader = (function (_super) {
         return _this;
     }
     TerrainLoader.prototype.load = function () {
+        var _this = this;
         var request = this.options.loader ? this.options.loader : new DefaultLoader(this.options);
         if (this.options.crossOrigin !== undefined) {
             request["crossOrigin"] = this.options.crossOrigin;
         }
         return request.load().then(function (response) {
             var parser = new GeotiffParser();
-            parser.parseHeader(event.target["response"]);
+            parser.parseHeader(response);
+            _this.dispatchEvent(new Event("header", { width: parser.imageWidth, height: parser.imageLength }));
             return parser.loadPixels();
         });
     };
@@ -670,46 +654,22 @@ var XyzElevationLoader = (function (_super) {
         var bbox = options.bbox;
         var deltaX = (bbox[2] - bbox[0]) / (options.resolutionX - 1);
         var deltaY = (bbox[3] - bbox[1]) / (options.resolutionY - 1);
-        var bottom = bbox[1];
+        var top = bbox[3];
         var left = bbox[0];
         return this.childLoader.load().then(function (responseArr) {
-            var response = [];
-            var lastRow;
-            var y;
-            responseArr.forEach(function (z, index) {
+            return responseArr.map(function (z, index) {
                 var x = index % options.resolutionX;
-                if (!x) {
-                    y = response.length; // The number of rows - 1.
-                    lastRow = [];
-                    response.push(lastRow);
-                }
-                lastRow.push({
+                var y = Math.floor(index / options.resolutionX);
+                return {
                     x: left + x * deltaX,
-                    y: bottom + y * deltaY,
+                    y: top - y * deltaY,
                     z: z
-                });
+                };
             });
-            return response;
         });
     };
     return XyzElevationLoader;
 }(Loader));
-
-var CswXyzLoader = (function () {
-    function CswXyzLoader(template, bbox, resolutionX, resolutionY) {
-        if (resolutionX === void 0) { resolutionX = 500; }
-        this.template = template;
-        this.bbox = bbox;
-        this.resolutionX = resolutionX;
-        this.resolutionY = resolutionY;
-    }
-    CswXyzLoader.prototype.load = function () {
-        var cswUrlOptions = new CswUrlOptions(this.template, this.bbox, { resolutionX: this.resolutionX, resoltionY: this.resolutionY });
-        var loader = new XyzElevationLoader(cswUrlOptions);
-        return loader.load();
-    };
-    return CswXyzLoader;
-}());
 
 // Given a bbox, return a 2d grid with the same x, y coordinates plus a z-coordinate as returned by the 1d TerrainLoader.
 var GeojsonElevationLoader = (function (_super) {
@@ -731,12 +691,8 @@ var GeojsonElevationLoader = (function (_super) {
             var response = {
                 type: "FeatureCollection",
                 bbox: [bbox[0], bbox[1], bbox[2], bbox[3]],
-                features: []
-            };
-            var features = response.features;
-            responseArr.forEach(function (row) {
-                row.forEach(function (entry) {
-                    features.push({
+                features: responseArr.map(function (entry) {
+                    return {
                         type: "Feature",
                         properties: [],
                         geometry: {
@@ -747,9 +703,9 @@ var GeojsonElevationLoader = (function (_super) {
                                 entry.z
                             ]
                         }
-                    });
-                });
-            });
+                    };
+                })
+            };
             return response;
         });
     };
@@ -758,6 +714,38 @@ var GeojsonElevationLoader = (function (_super) {
     };
     return GeojsonElevationLoader;
 }(Loader));
+
+var CswGeoJsonLoader = (function () {
+    function CswGeoJsonLoader(template, bbox, resolutionX, resolutionY) {
+        if (resolutionX === void 0) { resolutionX = 500; }
+        this.template = template;
+        this.bbox = bbox;
+        this.resolutionX = resolutionX;
+        this.resolutionY = resolutionY;
+    }
+    CswGeoJsonLoader.prototype.load = function () {
+        var cswUrlOptions = new CswUrlOptions(this.template, this.bbox, { resolutionX: this.resolutionX, resoltionY: this.resolutionY });
+        var loader = new GeojsonElevationLoader(cswUrlOptions);
+        return loader.load();
+    };
+    return CswGeoJsonLoader;
+}());
+
+var CswXyzLoader = (function () {
+    function CswXyzLoader(template, bbox, resolutionX, resolutionY) {
+        if (resolutionX === void 0) { resolutionX = 500; }
+        this.template = template;
+        this.bbox = bbox;
+        this.resolutionX = resolutionX;
+        this.resolutionY = resolutionY;
+    }
+    CswXyzLoader.prototype.load = function () {
+        var cswUrlOptions = new CswUrlOptions(this.template, this.bbox, { resolutionX: this.resolutionX, resoltionY: this.resolutionY });
+        var loader = new XyzElevationLoader(cswUrlOptions);
+        return loader.load();
+    };
+    return CswXyzLoader;
+}());
 
 // Given a bbox, return a 2d grid with the same x, y coordinates plus a z-coordinate as returned by the 1d TerrainLoader.
 var GridElevationLoader = (function () {
@@ -789,6 +777,7 @@ exports.FileLoader = FileLoader;
 exports.HttpTextLoader = HttpTextLoader;
 exports.CswPointElevationLoader = CswPointElevationLoader;
 exports.CswTerrainLoader = CswTerrainLoader;
+exports.CswGeoJsonLoader = CswGeoJsonLoader;
 exports.CswXyzLoader = CswXyzLoader;
 exports.TerrainLoader = TerrainLoader;
 exports.PointElevationLoader = PointElevationLoader;
