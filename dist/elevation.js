@@ -33,17 +33,15 @@ function __extends(d, b) {
  */ var RADIANS_TO_METERS = 6371000;
 var METERS_TO_RADIANS = 1 / RADIANS_TO_METERS;
 // OK
-var convertDegreesToRadians = function (multiplier) {
-    return function (num) {
-        return num * multiplier;
-    };
-}(Math.PI / 180);
+function convertDegreesToRadians(num) {
+    return num * Math.PI / 180;
+}
+
 // OK
-var convertRadiansToDegree = function (multiplier) {
-    return function (num) {
-        return num * multiplier;
-    };
-}(180 / Math.PI);
+function convertRadiansToDegree(num) {
+    return num * 180 / Math.PI;
+}
+
 function normalizeRadians(angle) {
     var newAngle = angle;
     while (newAngle <= -Math.PI)
@@ -77,14 +75,41 @@ function culledBbox(container, subset) {
     }
     return [left, bottom, right, top];
 }
-// OK. Bounding Box like bbox
-function createBboxFromPoints(coords) {
+/**
+ * Given an array of points, create a bounding box that encompasses them all.
+ * Optionally buffer the box by a proportion amount eg 0.05 represents a 5% further south, west east and north.
+ * Keep in mind with this example that is 21% more area because it grows 5% in 4 directions.
+ */
+function createBboxFromPoints(coords, buffer) {
+    if (buffer === void 0) { buffer = 0; }
     var bbox = [Infinity, Infinity, -Infinity, -Infinity];
     coords.forEach(function (point) {
         expandBbox(bbox, point);
     });
+    if (buffer) {
+        return createBufferedBbox(bbox, buffer);
+    }
     return bbox;
 }
+/**
+ * Buffer the box by a proportion amount eg 0.05 represents a 5% further south, west east and north.
+ * Keep in mind with this example that is 21% more area because it grows 5% in 4 directions.
+ * That is it is 10% wider and 10% higher.
+ *
+ */
+function createBufferedBbox(bbox, buffer) {
+    var deltaX = (bbox[2] - bbox[0]) * buffer;
+    var deltaY = (bbox[3] - bbox[1]) * buffer;
+    return [
+        bbox[0] - deltaX,
+        bbox[1] - deltaY,
+        bbox[2] + deltaX,
+        bbox[3] + deltaY
+    ];
+}
+/**
+ * Test that a position is within the bounding box.
+ */
 function positionWithinBbox(bbox, position) {
     return bbox[0] <= position[0]
         && bbox[1] <= position[1]
@@ -116,12 +141,10 @@ function calculatePosition(pt, bearing, distance) {
     var brng = convertDegreesToRadians(bearing);
     var lon1 = convertDegreesToRadians(pt[0]);
     var lat1 = convertDegreesToRadians(pt[1]);
-    var sinLat1 = Math.sin(lat1);
-    var cosLat1 = Math.cos(lat1);
     var lat2 = Math.asin(Math.sin(lat1) * Math.cos(dist) +
         Math.cos(lat1) * Math.sin(dist) * Math.cos(brng));
     var lon2 = lon1 + Math.atan2(Math.sin(brng) * Math.sin(dist) * Math.cos(lat1), Math.cos(dist) - Math.sin(lat1) * Math.sin(lat2));
-    lon2 = normalizeRadians(lon2 + 3 * Math.PI); // normalise -180 to +180
+    lon2 = normalizeRadians(lon2); // normalise -180 to +180
     return [convertRadiansToDegree(lon2), convertRadiansToDegree(lat2)];
 }
 function calculateSegmentDetails(line) {
@@ -371,6 +394,38 @@ var FileLoader = (function (_super) {
         });
     };
     return FileLoader;
+}(Loader));
+
+/**
+ * Sometimes you want to reuse the so this caches it.
+ * It can be placed in front of any loader so you might for instance
+ * cache GeoJSON, XYZ data or at some point even a higher level format.
+ */
+var CachedLoader = (function (_super) {
+    __extends(CachedLoader, _super);
+    function CachedLoader(options) {
+        var _this = _super.call(this) || this;
+        _this.options = options;
+        _this.loading = false;
+        if (_this.options.data)
+            _this.data = _this.options.data;
+        return _this;
+    }
+    CachedLoader.prototype.load = function () {
+        var _this = this;
+        if (this.data) {
+            return Promise.resolve(this.data);
+        }
+        if (!this.deferred) {
+            this.deferred = this.options.loader.load().then(function (data) {
+                _this.data = data;
+                return data;
+            });
+        }
+        return this.deferred;
+    };
+    
+    return CachedLoader;
 }(Loader));
 
 var HttpTextLoader = (function (_super) {
@@ -767,6 +822,82 @@ var CswXyzLoader = (function () {
     return CswXyzLoader;
 }());
 
+// A bit like a stream loader but it is all or nothing. It's up to the composer to turn it into a 2d array.
+var CswPathElevationLoader = (function (_super) {
+    __extends(CswPathElevationLoader, _super);
+    function CswPathElevationLoader(options) {
+        if (options === void 0) { options = {}; }
+        var _this = _super.call(this) || this;
+        _this.options = options;
+        return _this;
+    }
+    Object.defineProperty(CswPathElevationLoader.prototype, "path", {
+        set: function (path) {
+            this.options.path = path;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    CswPathElevationLoader.prototype.load = function () {
+        var bbox = createBboxFromPoints(this.options.path, this.options.buffer);
+        var extent = this.options.extent ? this.options.extent : Extent2d.WORLD;
+        // Better constrain it to the bounds. We expect others further down the food chain to check as well
+        // But they don't return the culled value and we need to map our points.
+        bbox = culledBbox(extent.toBbox(), bbox);
+        var options = Object.assign({
+            bbox: bbox,
+            extent: extent,
+            count: (this.options.count ? this.options.count : 500)
+        }, this.options);
+        var densePath = densify(options.path, options.count ? options.count : 500);
+        var lngMin = bbox[0];
+        var latMax = bbox[3];
+        var dx = bbox[2] - lngMin;
+        var dy = latMax - bbox[1];
+        var sideResolution = calcSides(options.count, dx / dy);
+        options.resolutionX = sideResolution.x;
+        options.resolutionY = sideResolution.y;
+        return new TerrainLoader(new CswUrlOptions(options))
+            .load()
+            .then(function (loaded) {
+            if (options.line) {
+                return {
+                    type: "Feature",
+                    geometry: {
+                        type: "LineString",
+                        coordinates: densePath.map(function (pt) { return [pt[0], pt[1], toHeight(pt)]; })
+                    }
+                };
+            }
+            return {
+                type: "FeatureCollection",
+                features: densePath.map(function (pt) {
+                    return {
+                        type: "Feature",
+                        geometry: {
+                            type: "Point",
+                            coordinates: [pt[0], pt[1], toHeight(pt)]
+                        }
+                    };
+                })
+            };
+            function toHeight(coord) {
+                var x = coord[0], y = coord[1], zeroX = lngMin, zeroY = latMax, cellY = Math.round((zeroY - y) / dy * (sideResolution.y - 1)), cellX = Math.round((x - zeroX) / dx * (sideResolution.x - 1)), index = cellY * sideResolution.x + cellX;
+                console.log("Cell x = " + cellX + ", y = " + cellY + " Index = " + index + ", value = " + loaded[index]);
+                return loaded[index];
+            }
+        });
+    };
+    return CswPathElevationLoader;
+}(Loader));
+function calcSides(diagonal, ar) {
+    // x * x + ar * ar * x * x = diagonal * diagonal
+    // (1 + ar * ar) * x * x = diagonal * diagonal
+    // x * x = diagonal * diagonal / (1 + ar * ar)
+    var y = Math.sqrt(diagonal * diagonal / (1 + ar * ar));
+    return { y: Math.ceil(y), x: Math.ceil(y * ar) };
+}
+
 // Given a bbox, return a 2d grid with the same x, y coordinates plus a z-coordinate as returned by the 1d TerrainLoader.
 var GridElevationLoader = (function () {
     function GridElevationLoader(options) {
@@ -794,12 +925,14 @@ var GridElevationLoader = (function () {
 exports.Extent2d = Extent2d;
 exports.Transection = Transection;
 exports.FileLoader = FileLoader;
+exports.CachedLoader = CachedLoader;
 exports.HttpTextLoader = HttpTextLoader;
 exports.CswPointElevationLoader = CswPointElevationLoader;
 exports.CswTerrainLoader = CswTerrainLoader;
 exports.CswGeoJsonLoader = CswGeoJsonLoader;
 exports.CswXyzLoader = CswXyzLoader;
 exports.TerrainLoader = TerrainLoader;
+exports.CswPathElevationLoader = CswPathElevationLoader;
 exports.PointElevationLoader = PointElevationLoader;
 exports.GeojsonElevationLoader = GeojsonElevationLoader;
 exports.GridElevationLoader = GridElevationLoader;
@@ -812,6 +945,7 @@ exports.normalizeRadians = normalizeRadians;
 exports.expandBbox = expandBbox;
 exports.culledBbox = culledBbox;
 exports.createBboxFromPoints = createBboxFromPoints;
+exports.createBufferedBbox = createBufferedBbox;
 exports.positionWithinBbox = positionWithinBbox;
 exports.densify = densify;
 exports.calculatePosition = calculatePosition;

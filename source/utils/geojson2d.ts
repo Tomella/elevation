@@ -14,18 +14,14 @@ export let RADIANS_TO_METERS = 6371000;
 export let METERS_TO_RADIANS = 1 / RADIANS_TO_METERS;
 
 // OK
-export let convertDegreesToRadians: Function = function (multiplier) {
-   return function (num: number) {
-      return num * multiplier;
-   };
-} (Math.PI / 180);
+export function convertDegreesToRadians(num: number) {
+   return num * Math.PI / 180;
+};
 
 // OK
-export let convertRadiansToDegree: Function = function (multiplier) {
-   return function (num: number) {
-      return num * multiplier;
-   };
-} (180 / Math.PI);
+export function convertRadiansToDegree(num: number) {
+   return num * 180 / Math.PI;
+};
 
 export function normalizeRadians(angle) {
     let newAngle = angle;
@@ -41,7 +37,6 @@ export function expandBbox(bbox: number[], rawPoint: number[]) {
    bbox[2] = Math.max(bbox[2], rawPoint[0]);
    bbox[3] = Math.max(bbox[3], rawPoint[1]);
 }
-
 
 // Not OK
 export function culledBbox(container: number[], subset: number[]) {
@@ -60,19 +55,45 @@ export function culledBbox(container: number[], subset: number[]) {
       || top <= bottom) {     // Too thin
          return null;
    }
-
    return [left, bottom, right, top];
 }
 
-// OK. Bounding Box like bbox
-export function createBboxFromPoints(coords: GeoJSON.Position[]): number[] {
+/**
+ * Given an array of points, create a bounding box that encompasses them all.
+ * Optionally buffer the box by a proportion amount eg 0.05 represents a 5% further south, west east and north.
+ * Keep in mind with this example that is 21% more area because it grows 5% in 4 directions.
+ */
+export function createBboxFromPoints(coords: GeoJSON.Position[], buffer: number = 0): number[] {
    let bbox = [Infinity, Infinity, -Infinity, -Infinity];
    coords.forEach(point => {
       expandBbox(bbox, point);
    });
+   if (buffer) {
+      return createBufferedBbox(bbox, buffer);
+   }
    return bbox;
 }
 
+/**
+ * Buffer the box by a proportion amount eg 0.05 represents a 5% further south, west east and north.
+ * Keep in mind with this example that is 21% more area because it grows 5% in 4 directions.
+ * That is it is 10% wider and 10% higher.
+ *
+ */
+export function createBufferedBbox(bbox: number[], buffer: number) {
+   let deltaX = (bbox[2] - bbox[0]) * buffer;
+   let deltaY = (bbox[3] - bbox[1]) * buffer;
+   return [
+      bbox[0] - deltaX,
+      bbox[1] - deltaY,
+      bbox[2] + deltaX,
+      bbox[3] + deltaY
+   ];
+}
+
+/**
+ * Test that a position is within the bounding box.
+ */
 export function positionWithinBbox(bbox: number[], position: GeoJSON.Position): boolean {
    return bbox[0] <= position[0]
       && bbox[1] <= position[1]
@@ -111,15 +132,13 @@ export function calculatePosition(pt: GeoJSON.Position, bearing: number, distanc
    let lon1 = convertDegreesToRadians(pt[0]);
    let lat1 = convertDegreesToRadians(pt[1]);
 
-   let sinLat1 = Math.sin(lat1);
-   let cosLat1 = Math.cos(lat1);
-
 
    let lat2 = Math.asin(Math.sin(lat1) * Math.cos(dist) +
       Math.cos(lat1) * Math.sin(dist) * Math.cos(brng));
-   let lon2 = lon1 + Math.atan2(Math.sin(brng) * Math.sin(dist) * Math.cos(lat1),
-      Math.cos(dist) - Math.sin(lat1) * Math.sin(lat2));
-   lon2 = normalizeRadians(lon2 + 3 * Math.PI);  // normalise -180 to +180
+
+   let lon2 = lon1 + Math.atan2(Math.sin(brng) * Math.sin(dist) * Math.cos(lat1), Math.cos(dist) - Math.sin(lat1) * Math.sin(lat2));
+
+   lon2 = normalizeRadians(lon2);  // normalise -180 to +180
 
    return [convertRadiansToDegree(lon2), convertRadiansToDegree(lat2)];
 }
