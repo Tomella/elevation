@@ -1,6 +1,6 @@
 import { Extent2d } from "../domain/extent2d";
 
-export class CswUrlOptions {
+export class WcsUrlOptions {
    constructor(public options: any) {}
 
    get resolutionY() {

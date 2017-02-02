@@ -1,6 +1,6 @@
 import { Extent2d } from "../domain/extent2d";
 
-export class CswPointOptions {
+export class WcsPointOptions {
    constructor(public options: any = {}) {
    }
 

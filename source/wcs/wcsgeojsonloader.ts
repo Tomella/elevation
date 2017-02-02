@@ -1,13 +1,13 @@
-import { CswUrlOptions } from "./cswurloptions";
+import { WcsUrlOptions } from "./wcsurloptions";
 import { GeojsonElevationLoader } from "../geotiff/geojsonelevationloader";
 
-export class CswGeoJsonLoader {
+export class WcsGeoJsonLoader {
    constructor(public options: any = {}) {
    }
 
    load(): Promise<GeoJSON.FeatureCollection<GeoJSON.Point>> {
-      let cswUrlOptions = new CswUrlOptions(this.options);
-      let loader = new GeojsonElevationLoader(cswUrlOptions);
+      let wcsUrlOptions = new WcsUrlOptions(this.options);
+      let loader = new GeojsonElevationLoader(wcsUrlOptions);
       return loader.load();
    }
 }

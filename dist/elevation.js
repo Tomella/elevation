@@ -573,26 +573,26 @@ var PointElevationLoader = (function () {
     return PointElevationLoader;
 }());
 
-var CswPointOptions = (function () {
-    function CswPointOptions(options) {
+var WcsPointOptions = (function () {
+    function WcsPointOptions(options) {
         if (options === void 0) { options = {}; }
         this.options = options;
     }
-    Object.defineProperty(CswPointOptions.prototype, "template", {
+    Object.defineProperty(WcsPointOptions.prototype, "template", {
         get: function () {
             return this.options.point;
         },
         enumerable: true,
         configurable: true
     });
-    Object.defineProperty(CswPointOptions.prototype, "point", {
+    Object.defineProperty(WcsPointOptions.prototype, "point", {
         get: function () {
             return this.options.point;
         },
         enumerable: true,
         configurable: true
     });
-    Object.defineProperty(CswPointOptions.prototype, "bbox", {
+    Object.defineProperty(WcsPointOptions.prototype, "bbox", {
         get: function () {
             return [
                 this.point[0] - 0.000001,
@@ -604,14 +604,14 @@ var CswPointOptions = (function () {
         enumerable: true,
         configurable: true
     });
-    Object.defineProperty(CswPointOptions.prototype, "extent", {
+    Object.defineProperty(WcsPointOptions.prototype, "extent", {
         get: function () {
             return new (Extent2d.bind.apply(Extent2d, [void 0].concat(this.bbox)))();
         },
         enumerable: true,
         configurable: true
     });
-    Object.defineProperty(CswPointOptions.prototype, "location", {
+    Object.defineProperty(WcsPointOptions.prototype, "location", {
         get: function () {
             return this.template
                 .replace("${resx}", 1)
@@ -623,37 +623,37 @@ var CswPointOptions = (function () {
         enumerable: true,
         configurable: true
     });
-    return CswPointOptions;
+    return WcsPointOptions;
 }());
 
-var CswPointElevationLoader = (function (_super) {
-    __extends(CswPointElevationLoader, _super);
-    function CswPointElevationLoader(options) {
+var WcsPointElevationLoader = (function (_super) {
+    __extends(WcsPointElevationLoader, _super);
+    function WcsPointElevationLoader(options) {
         if (options === void 0) { options = {}; }
         var _this = _super.call(this) || this;
         _this.options = options;
         return _this;
     }
-    Object.defineProperty(CswPointElevationLoader.prototype, "point", {
+    Object.defineProperty(WcsPointElevationLoader.prototype, "point", {
         set: function (pt) {
             this.options.point = pt;
         },
         enumerable: true,
         configurable: true
     });
-    CswPointElevationLoader.prototype.load = function () {
-        var cswPointElevationOptions = new CswPointOptions(this.options);
-        var loader = new PointElevationLoader(cswPointElevationOptions);
+    WcsPointElevationLoader.prototype.load = function () {
+        var wcsPointElevationOptions = new WcsPointOptions(this.options);
+        var loader = new PointElevationLoader(wcsPointElevationOptions);
         return loader.load();
     };
-    return CswPointElevationLoader;
+    return WcsPointElevationLoader;
 }(Loader));
 
-var CswUrlOptions = (function () {
-    function CswUrlOptions(options) {
+var WcsUrlOptions = (function () {
+    function WcsUrlOptions(options) {
         this.options = options;
     }
-    Object.defineProperty(CswUrlOptions.prototype, "resolutionY", {
+    Object.defineProperty(WcsUrlOptions.prototype, "resolutionY", {
         get: function () {
             return this.options.resolutionY ? this.options.resolutionY : Math.round(this.options.resolutionX * (this.options.bbox[3] - this.options.bbox[1]) / (this.options.bbox[2] - this.options.bbox[0]));
         },
@@ -663,35 +663,35 @@ var CswUrlOptions = (function () {
         enumerable: true,
         configurable: true
     });
-    Object.defineProperty(CswUrlOptions.prototype, "resolutionX", {
+    Object.defineProperty(WcsUrlOptions.prototype, "resolutionX", {
         get: function () {
             return this.options.resolutionX ? this.options.resolutionX : 500;
         },
         enumerable: true,
         configurable: true
     });
-    Object.defineProperty(CswUrlOptions.prototype, "template", {
+    Object.defineProperty(WcsUrlOptions.prototype, "template", {
         get: function () {
             return this.options.template;
         },
         enumerable: true,
         configurable: true
     });
-    Object.defineProperty(CswUrlOptions.prototype, "bbox", {
+    Object.defineProperty(WcsUrlOptions.prototype, "bbox", {
         get: function () {
             return this.options.bbox;
         },
         enumerable: true,
         configurable: true
     });
-    Object.defineProperty(CswUrlOptions.prototype, "extent", {
+    Object.defineProperty(WcsUrlOptions.prototype, "extent", {
         get: function () {
             return this.options.extent ? this.options.extent : Extent2d.WORLD;
         },
         enumerable: true,
         configurable: true
     });
-    Object.defineProperty(CswUrlOptions.prototype, "location", {
+    Object.defineProperty(WcsUrlOptions.prototype, "location", {
         get: function () {
             return this.template
                 .replace("${resx}", this.resolutionX)
@@ -703,20 +703,20 @@ var CswUrlOptions = (function () {
         enumerable: true,
         configurable: true
     });
-    return CswUrlOptions;
+    return WcsUrlOptions;
 }());
 
-var CswTerrainLoader = (function () {
-    function CswTerrainLoader(options) {
+var WcsTerrainLoader = (function () {
+    function WcsTerrainLoader(options) {
         if (options === void 0) { options = {}; }
         this.options = options;
     }
-    CswTerrainLoader.prototype.load = function () {
-        var cswUrlOptions = new CswUrlOptions(this.options);
-        var loader = new TerrainLoader(cswUrlOptions);
+    WcsTerrainLoader.prototype.load = function () {
+        var wcsUrlOptions = new WcsUrlOptions(this.options);
+        var loader = new TerrainLoader(wcsUrlOptions);
         return loader.load();
     };
-    return CswTerrainLoader;
+    return WcsTerrainLoader;
 }());
 
 // Given a bbox, return a 2d grid with the same x, y coordinates plus a z-coordinate as returned by the 1d TerrainLoader.
@@ -797,48 +797,48 @@ var GeojsonElevationLoader = (function (_super) {
     return GeojsonElevationLoader;
 }(Loader));
 
-var CswGeoJsonLoader = (function () {
-    function CswGeoJsonLoader(options) {
+var WcsGeoJsonLoader = (function () {
+    function WcsGeoJsonLoader(options) {
         if (options === void 0) { options = {}; }
         this.options = options;
     }
-    CswGeoJsonLoader.prototype.load = function () {
-        var cswUrlOptions = new CswUrlOptions(this.options);
-        var loader = new GeojsonElevationLoader(cswUrlOptions);
+    WcsGeoJsonLoader.prototype.load = function () {
+        var wcsUrlOptions = new WcsUrlOptions(this.options);
+        var loader = new GeojsonElevationLoader(wcsUrlOptions);
         return loader.load();
     };
-    return CswGeoJsonLoader;
+    return WcsGeoJsonLoader;
 }());
 
-var CswXyzLoader = (function () {
-    function CswXyzLoader(options) {
+var WcsXyzLoader = (function () {
+    function WcsXyzLoader(options) {
         this.options = options;
     }
-    CswXyzLoader.prototype.load = function () {
-        var cswUrlOptions = new CswUrlOptions(this.options);
-        var loader = new XyzElevationLoader(cswUrlOptions);
+    WcsXyzLoader.prototype.load = function () {
+        var wcsUrlOptions = new WcsUrlOptions(this.options);
+        var loader = new XyzElevationLoader(wcsUrlOptions);
         return loader.load();
     };
-    return CswXyzLoader;
+    return WcsXyzLoader;
 }());
 
 // A bit like a stream loader but it is all or nothing. It's up to the composer to turn it into a 2d array.
-var CswPathElevationLoader = (function (_super) {
-    __extends(CswPathElevationLoader, _super);
-    function CswPathElevationLoader(options) {
+var WcsPathElevationLoader = (function (_super) {
+    __extends(WcsPathElevationLoader, _super);
+    function WcsPathElevationLoader(options) {
         if (options === void 0) { options = {}; }
         var _this = _super.call(this) || this;
         _this.options = options;
         return _this;
     }
-    Object.defineProperty(CswPathElevationLoader.prototype, "path", {
+    Object.defineProperty(WcsPathElevationLoader.prototype, "path", {
         set: function (path) {
             this.options.path = path;
         },
         enumerable: true,
         configurable: true
     });
-    CswPathElevationLoader.prototype.load = function () {
+    WcsPathElevationLoader.prototype.load = function () {
         var bbox = createBboxFromPoints(this.options.path, this.options.buffer);
         var extent = this.options.extent ? this.options.extent : Extent2d.WORLD;
         // Better constrain it to the bounds. We expect others further down the food chain to check as well
@@ -857,7 +857,7 @@ var CswPathElevationLoader = (function (_super) {
         var sideResolution = calcSides(options.count, dx / dy);
         options.resolutionX = sideResolution.x;
         options.resolutionY = sideResolution.y;
-        return new TerrainLoader(new CswUrlOptions(options))
+        return new TerrainLoader(new WcsUrlOptions(options))
             .load()
             .then(function (loaded) {
             if (options.line) {
@@ -888,7 +888,7 @@ var CswPathElevationLoader = (function (_super) {
             }
         });
     };
-    return CswPathElevationLoader;
+    return WcsPathElevationLoader;
 }(Loader));
 function calcSides(diagonal, ar) {
     // x * x + ar * ar * x * x = diagonal * diagonal
@@ -927,12 +927,12 @@ exports.Transection = Transection;
 exports.FileLoader = FileLoader;
 exports.CachedLoader = CachedLoader;
 exports.HttpTextLoader = HttpTextLoader;
-exports.CswPointElevationLoader = CswPointElevationLoader;
-exports.CswTerrainLoader = CswTerrainLoader;
-exports.CswGeoJsonLoader = CswGeoJsonLoader;
-exports.CswXyzLoader = CswXyzLoader;
+exports.WcsPointElevationLoader = WcsPointElevationLoader;
+exports.WcsTerrainLoader = WcsTerrainLoader;
+exports.WcsGeoJsonLoader = WcsGeoJsonLoader;
+exports.WcsXyzLoader = WcsXyzLoader;
 exports.TerrainLoader = TerrainLoader;
-exports.CswPathElevationLoader = CswPathElevationLoader;
+exports.WcsPathElevationLoader = WcsPathElevationLoader;
 exports.PointElevationLoader = PointElevationLoader;
 exports.GeojsonElevationLoader = GeojsonElevationLoader;
 exports.GridElevationLoader = GridElevationLoader;

@@ -1,8 +1,8 @@
 import { Loader } from "../loaders/loader";
 import { PointElevationLoader } from "../geotiff/pointelevationloader";
-import { CswPointOptions } from "./cswpointoptions";
+import { WcsPointOptions } from "./wcspointoptions";
 
-export class CswPointElevationLoader extends Loader<number[]> {
+export class WcsPointElevationLoader extends Loader<number[]> {
    constructor(public options: any = {}) {
       super();
    }
@@ -12,8 +12,8 @@ export class CswPointElevationLoader extends Loader<number[]> {
    }
 
    load(): Promise<number[]> {
-      let cswPointElevationOptions = new CswPointOptions(this.options);
-      let loader = new PointElevationLoader(cswPointElevationOptions);
+      let wcsPointElevationOptions = new WcsPointOptions(this.options);
+      let loader = new PointElevationLoader(wcsPointElevationOptions);
       return loader.load();
    }
 }
