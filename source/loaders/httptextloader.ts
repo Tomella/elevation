@@ -40,7 +40,7 @@ export class HttpTextLoader extends Loader<any> {
          }
 
          request.open("GET", this.location, true );
-         request.responseType = "arraybuffer";
+         request.responseType = "text";
          request.send( null );
       });
    };

@@ -464,7 +464,7 @@ var HttpTextLoader = (function (_super) {
                 request["crossOrigin"] = _this.options.crossOrigin;
             }
             request.open("GET", _this.location, true);
-            request.responseType = "arraybuffer";
+            request.responseType = "text";
             request.send(null);
         });
     };
@@ -478,6 +478,82 @@ var HttpTextLoader = (function (_super) {
     });
     
     return HttpTextLoader;
+}(Loader));
+
+// Given a bbox, return a 2d grid with the same x, y coordinates plus a z-coordinate as returned by the 1d TerrainLoader.
+var OsmGeoJsonLoader = (function (_super) {
+    __extends(OsmGeoJsonLoader, _super);
+    function OsmGeoJsonLoader(options) {
+        var _this = _super.call(this) || this;
+        _this.options = options;
+        return _this;
+    }
+    OsmGeoJsonLoader.prototype.load = function () {
+        var request = this.options.loader ? this.options.loader : new HttpTextLoader(this.options.location);
+        if (this.options.crossOrigin !== undefined) {
+            request["crossOrigin"] = this.options.crossOrigin;
+        }
+        return request.load().then(function (response) {
+            var parser = new X2JS();
+            var json = parser.xml_str2json(response);
+            // this.dispatchEvent(new Event("header", {width: parser.imageWidth, height: parser.imageLength} ));
+            return jsonToGeoJson(json);
+        });
+        function jsonToGeoJson(json) {
+            var osm = json.osm;
+            var bounds = osm.bounds;
+            var nodesMap = {};
+            osm.node.forEach(function (node) {
+                nodesMap[node._id] = node;
+            });
+            var response = {
+                type: "FeatureCollection",
+                bbox: [+bounds._minlon, +bounds._minlat, +bounds._maxlon, +bounds._maxlat],
+                features: osm.way.map(function (way) {
+                    return createFeature(way);
+                })
+            };
+            return response;
+            function createFeature(way) {
+                // If first and last nd are same, then its a polygon
+                var nodes = way.nd;
+                var first = nodes[0];
+                var last = nodes[nodes.length - 1];
+                var feature = {
+                    type: "Feature",
+                    properties: createProperties(way),
+                    geometry: {
+                        coordinates: []
+                    }
+                };
+                var geometry = feature.geometry;
+                var coordinates = geometry.coordinates;
+                if (last._ref === first._ref) {
+                    geometry.type = "Polygon";
+                    coordinates.push([]);
+                    coordinates = coordinates[0];
+                }
+                else {
+                    geometry.type = "LineString";
+                }
+                nodes.forEach(function (nd) {
+                    var node = nodesMap[nd._ref];
+                    // Set the point on a zero plane
+                    var coords = [+node._lon, +node._lat, 0];
+                    coordinates.push(coords);
+                });
+                return feature;
+            }
+            function createProperties(way) {
+                var properties = {};
+                way.tag.forEach(function (tag) {
+                    properties[tag._k] = tag._v;
+                });
+                return properties;
+            }
+        }
+    };
+    return OsmGeoJsonLoader;
 }(Loader));
 
 // Given a GeoTiff end point, return a promise that resolves to a one dimensional array of z values.
@@ -927,6 +1003,7 @@ exports.Transection = Transection;
 exports.FileLoader = FileLoader;
 exports.CachedLoader = CachedLoader;
 exports.HttpTextLoader = HttpTextLoader;
+exports.OsmGeoJsonLoader = OsmGeoJsonLoader;
 exports.WcsPointElevationLoader = WcsPointElevationLoader;
 exports.WcsTerrainLoader = WcsTerrainLoader;
 exports.WcsGeoJsonLoader = WcsGeoJsonLoader;

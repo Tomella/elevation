@@ -4,6 +4,7 @@ export { Transection } from "./services/transection";
 export { FileLoader } from "./loaders/fileloader";
 export { CachedLoader } from "./loaders/cachedloader";
 export { HttpTextLoader } from "./loaders/httptextloader";
+export { OsmGeoJsonLoader } from "./openstreetmaps/osmgeojsonloader";
 export { WcsPointElevationLoader } from "./wcs/wcspointelevationloader";
 export { WcsTerrainLoader } from "./wcs/wcsterrainloader";
 export { WcsGeoJsonLoader } from "./wcs/wcsgeojsonloader";
