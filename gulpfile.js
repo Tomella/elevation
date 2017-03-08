@@ -1,7 +1,9 @@
 var buffer = require('vinyl-buffer');
+var concat = require('gulp-concat');
 var del = require('del');
 var gulp = require('gulp');
 var rename = require('gulp-rename');
+var gulpTs = require('gulp-typescript');
 var rollup = require('rollup-stream');
 var rollupTypescript = require('rollup-plugin-typescript');
 var source = require('vinyl-source-stream');
@@ -16,7 +18,7 @@ var ASSETS_BASE = "dist";
 
 gulp.task('libs', function() {
   return rollup({
-      entry: './source/libs.ts',
+      entry: './source/index.ts',
       plugins: [
          rollupTypescript({typescript:ts})
       ],
@@ -36,6 +38,24 @@ gulp.task('dist', ['libs'], function () {
       }))
       .pipe(gulp.dest('dist'));
 });
+
+// I'm too stupid to work out how to generate a single index.d.ts so I just join
+// up all the definitions and manually edit the duplicates and chuck a namespace around them.
+gulp.task('definitions', ['buildDefinitions'], function() {
+   return gulp.src('./dist/definitions/**/*.ts')
+    .pipe(concat('index.d.ts'))
+    .pipe(gulp.dest('./dist/'));
+});
+
+gulp.task('buildDefinitions', function() {
+    var tsResult = gulp.src('source/**/*.ts')
+        .pipe(gulpTs({
+         "target": "es6",
+         "declaration": true
+    }));
+    return tsResult.dts.pipe(gulp.dest('dist/definitions'));
+});
+// End of my stupidity.
 
 gulp.task("tslint", function() {
     return gulp.src("source/**/*.ts")
