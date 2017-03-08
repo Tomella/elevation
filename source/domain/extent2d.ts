@@ -28,7 +28,7 @@ export class Extent2d {
    }
 
    set(extent: Extent2d) {
-      this._extent = [extent.lngMin, extent.latMin, extent.lngMax, extent.latMin];
+      this._extent = [extent.lngMin, extent.latMin, extent.lngMax, extent.latMax];
       return this;
    }
 
