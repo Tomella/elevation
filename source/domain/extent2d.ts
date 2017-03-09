@@ -11,43 +11,43 @@ export class Extent2d {
       this._extent = [lngMin, latMin, lngMax, latMax];
    }
 
-   get lngMin() {
+   get lngMin(): number {
       return this._extent[0];
    }
 
-   get latMin() {
+   get latMin(): number {
       return this._extent[1];
    }
 
-   get lngMax() {
+   get lngMax(): number {
       return this._extent[2];
    }
 
-   get latMax() {
+   get latMax(): number {
       return this._extent[3];
    }
 
-   set(extent: Extent2d) {
+   set(extent: Extent2d): Extent2d {
       this._extent = [extent.lngMin, extent.latMin, extent.lngMax, extent.latMax];
       return this;
    }
 
-   setFromPoints(points: GeoJSON.Position[]) {
+   setFromPoints(points: GeoJSON.Position[]): Extent2d {
       this._extent = createBboxFromPoints(points);
       return this;
    }
 
-   expand(point: number[]) {
+   expand(point: number[]): Extent2d {
       expandBbox(this._extent, point);
       return this;
    }
 
-   toBbox() {
+   toBbox(): number[] {
       // Clone it.
       return [this.lngMin, this.latMin, this.lngMax, this.latMax];
    }
 
-   clone() {
+   clone(): Extent2d {
       return new Extent2d().set(this);
    }
 }
