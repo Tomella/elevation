@@ -546,7 +546,7 @@ var OsmGeoJsonLoader = (function (_super) {
             }
             function createProperties(way) {
                 var properties = {};
-                way.tag.forEach(function (tag) {
+                (Array.isArray(way.tag) ? way.tag : [way.tag]).forEach(function (tag) {
                     properties[tag._k] = tag._v;
                 });
                 return properties;

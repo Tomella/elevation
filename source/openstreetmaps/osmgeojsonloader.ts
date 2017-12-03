@@ -77,7 +77,7 @@ export class OsmGeoJsonLoader extends Loader<GeoJSON.FeatureCollection<any>> {
 
          function createProperties(way) {
             let properties = {};
-            way.tag.forEach((tag) => {
+            (Array.isArray(way.tag) ? way.tag : [way.tag]).forEach((tag) => {
                properties[tag._k] = tag._v;
             });
             return properties;
